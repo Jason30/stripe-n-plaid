@@ -30,11 +30,11 @@ function Home(props) {
   const { open, ready, error } = usePlaidLink(config)
 
   useEffect(() => {
-    const query = new URLSearchParams(window.location.search)
-    email = query.get('email')
     if (!ready) {
       return
     }
+    const query = new URLSearchParams(window.location.search)
+    email = query.get('email')
     init()
   }, [ready, open])
 
