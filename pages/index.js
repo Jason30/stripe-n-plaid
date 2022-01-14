@@ -102,7 +102,7 @@ export async function getServerSideProps() {
       user: {
         client_user_id: clientUserId,
       },
-      client_name: 'My App',
+      client_name: 'Stripe + Plaid',
       products: ['auth'],
       country_codes: ['US'],
       language: 'en',
