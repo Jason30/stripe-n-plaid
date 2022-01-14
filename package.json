@@ -1,0 +1,21 @@
+{
+  "name": "stripeplaid",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "12.0.8",
+    "plaid": "^9.10.0",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "stripe": "^8.197.0"
+  },
+  "devDependencies": {
+    "eslint": "8.6.0",
+    "eslint-config-next": "12.0.8"
+  }
+}
