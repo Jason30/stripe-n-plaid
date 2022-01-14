@@ -1,29 +1,15 @@
 import Head from 'next/head'
-import Script from 'next/script'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { PlaidApi } from 'plaid'
-import { configuration } from '../lib/utils'
+import { usePlaidLink } from 'react-plaid-link'
+import { configuration, validateEmail } from '../lib/utils'
 
 function Home(props) {
   const { link_token } = props
   const [message, setMessage] = useState('')
+  let email
 
-  let plaidHandler, email
-  useEffect(() => {
-    if (!plaidHandler) {
-      plaidHandler = Plaid.create({
-        token: link_token,
-        onSuccess,
-        onLoad,
-        onExit
-      })
-    }
-    const query = new URLSearchParams(window.location.search)
-    email = query.get('email')
-    initPlaidWindow()
-  }, [])
-
-  const onSuccess = async (public_token, metadata) => {
+  const onSuccess = useCallback(async (public_token, metadata) => {
     // Select Account is disabled: https://dashboard.plaid.com/link/account-select
     const account_id = metadata.accounts[0].id
 
@@ -31,34 +17,39 @@ function Home(props) {
       method: 'POST',
       body: JSON.stringify({ public_token, account_id, email })
     })
-
     if (response.ok) {
       setMessage('Thank you!')
     }
+  })
+
+  const config = {
+    token: link_token,
+    onSuccess
   }
 
-  const onLoad = () => { }
+  const { open, ready, error } = usePlaidLink(config)
 
-  const onExit = async (err, metadata) => {
-    // The user exited the Link flow.
-    if (err != null) {
-      // The user encountered a Plaid API error
-      // prior to exiting.
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search)
+    email = query.get('email')
+    if (!ready) {
+      return
     }
-  }
+    init()
+  }, [ready, open])
 
-  const initPlaidWindow = () => {
-    if (email) {
-      plaidHandler.open()
+  const init = () => {
+    if (!email) {
+      setMessage('No valid email is found!')
+    } else if (!validateEmail(email)) {
+      setMessage(email + 'is not a valid email address!')
+    } else {
+      open()
     }
   }
 
   return (
     <>
-      <Script
-        src='https://cdn.plaid.com/link/v2/stable/link-initialize.js'
-        strategy='beforeInteractive'
-      />
       <Head>
         <title>Plaid + Stripe</title>
         <meta name="description" content="Plaid and Stripe integration" />
@@ -102,11 +93,10 @@ export async function getServerSideProps() {
       user: {
         client_user_id: clientUserId,
       },
-      client_name: 'Stripe + Plaid',
+      client_name: 'Habitat Logistics',
       products: ['auth'],
       country_codes: ['US'],
-      language: 'en',
-      webhook: 'https://sample.webhook.com',
+      language: 'en'
     })
 
     // Pass the result to your client-side app to initialize Link
