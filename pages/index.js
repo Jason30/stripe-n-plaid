@@ -5,9 +5,8 @@ import { usePlaidLink } from 'react-plaid-link'
 import { configuration, validateEmail } from '../lib/utils'
 
 function Home(props) {
-  const { link_token } = props
+  const { link_token, email } = props
   const [message, setMessage] = useState('')
-  let email
 
   const onSuccess = async (public_token, metadata) => {
     // Select Account is disabled: https://dashboard.plaid.com/link/account-select
@@ -27,14 +26,12 @@ function Home(props) {
     onSuccess
   }
 
-  const { open, ready, error } = usePlaidLink(config)
+  const { open, ready } = usePlaidLink(config)
 
   useEffect(() => {
     if (!ready) {
       return
     }
-    const query = new URLSearchParams(window.location.search)
-    email = query.get('email')
     init()
   }, [ready, open])
 
@@ -84,7 +81,7 @@ function Home(props) {
   )
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ query }) {
   const client = new PlaidApi(configuration)
 
   const clientUserId = 'Stripe test'
@@ -102,7 +99,7 @@ export async function getServerSideProps() {
     // Pass the result to your client-side app to initialize Link
     const { data } = response
 
-    return { props: { ...data } }
+    return { props: { ...data, email: query.email } }
   } catch (e) {
     return { props: {} }
   }
