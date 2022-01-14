@@ -15,7 +15,7 @@ function Home(props) {
 
     const response = await fetch('/api/save_to_stripe', {
       method: 'POST',
-      body: JSON.stringify({ public_token, account_id, email })
+      body: JSON.stringify({ email, public_token, account_id })
     })
     if (response.ok) {
       setMessage('Thank you!')
