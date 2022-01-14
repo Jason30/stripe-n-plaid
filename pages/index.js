@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PlaidApi } from 'plaid'
 import { usePlaidLink } from 'react-plaid-link'
 import { configuration, validateEmail } from '../lib/utils'
@@ -9,7 +9,7 @@ function Home(props) {
   const [message, setMessage] = useState('')
   let email
 
-  const onSuccess = useCallback(async (public_token, metadata) => {
+  const onSuccess = async (public_token, metadata) => {
     // Select Account is disabled: https://dashboard.plaid.com/link/account-select
     const account_id = metadata.accounts[0].id
 
@@ -20,7 +20,7 @@ function Home(props) {
     if (response.ok) {
       setMessage('Thank you!')
     }
-  })
+  }
 
   const config = {
     token: link_token,

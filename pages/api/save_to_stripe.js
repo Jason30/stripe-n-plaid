@@ -9,6 +9,9 @@ export default async function handler(req, res) {
   }
 
   const { public_token, account_id, email } = JSON.parse(req.body)
+  if (!public_token || !account_id || !email) {
+    throw new Error('You must provide valie token, accountId and email')
+  }
 
   const client = new PlaidApi(configuration)
 
