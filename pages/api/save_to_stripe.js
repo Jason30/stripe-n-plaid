@@ -8,9 +8,9 @@ export default async function handler(req, res) {
     res.status(405).end('Method Not Allowed')
   }
 
-  const { public_token, account_id, email } = JSON.parse(req.body)
-  if (!public_token || !account_id || !email) {
-    res.status(402).send('You must provide valie token, accountId and email')
+  const { public_token, account_id, id } = JSON.parse(req.body)
+  if (!public_token || !account_id || !id) {
+    res.status(402).send('You must provide valie token, accountId and id')
   }
 
   const client = new PlaidApi(configuration)
@@ -31,26 +31,12 @@ export default async function handler(req, res) {
     const stripeTokenResponse = await client.processorStripeBankAccountTokenCreate(request)
     const bankAccountToken = stripeTokenResponse.data.stripe_bank_account_token
 
-    // Try finding existing customer by email address
-    let customerList = await stripe.customers.list({
-      email,
-      limit: 1
-    })
-
-    if (customerList.data.length === 0) {
-      // If non found create one
-      await stripe.customers.create({
-        email,
+    await stripe.customers.update(
+      id,
+      {
         source: bankAccountToken
-      })
-    } else {
-      await stripe.customers.update(
-        customerList.data[0]?.id,
-        {
-          source: bankAccountToken
-        }
-      )
-    }
+      }
+    )
 
     res.status(200).send('success')
   } catch (error) {
