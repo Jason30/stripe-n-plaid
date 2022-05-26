@@ -2,19 +2,19 @@ import Head from 'next/head'
 import { useEffect, useState } from 'react'
 import { PlaidApi } from 'plaid'
 import { usePlaidLink } from 'react-plaid-link'
-import { configuration, validateEmail } from '../lib/utils'
+import Stripe from 'stripe'
+import { configuration } from '../lib/utils'
 
 function Home(props) {
-  const { link_token, email } = props
+  const { link_token, id } = props
   const [message, setMessage] = useState('')
-
   const onSuccess = async (public_token, metadata) => {
     // Select Account is disabled: https://dashboard.plaid.com/link/account-select
     const account_id = metadata.accounts[0].id
 
     const response = await fetch('/api/save_to_stripe', {
       method: 'POST',
-      body: JSON.stringify({ email, public_token, account_id })
+      body: JSON.stringify({ id, public_token, account_id })
     })
     if (response.ok) {
       setMessage('Thank you!')
@@ -32,18 +32,8 @@ function Home(props) {
     if (!ready) {
       return
     }
-    init()
+    open()
   }, [ready, open])
-
-  const init = () => {
-    if (!email) {
-      setMessage('No valid email is found!')
-    } else if (!validateEmail(email)) {
-      setMessage(email + 'is not a valid email address!')
-    } else {
-      open()
-    }
-  }
 
   return (
     <>
@@ -81,11 +71,26 @@ function Home(props) {
   )
 }
 
-export async function getServerSideProps({ query }) {
+export async function getServerSideProps({ res, query }) {
   const client = new PlaidApi(configuration)
+  const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
-  const clientUserId = 'Stripe test'
+  const clientUserId = 'Stripe'
   try {
+    if (!query.id) {
+      res.statusCode = 307
+      res.setHeader('Location', `/not-found`)
+      return { props: {} }
+    }
+
+    const customer = await stripe.customers.retrieve(query.id)
+
+    if (!customer) {
+      res.statusCode = 307
+      res.setHeader('Location', `/not-found`)
+      return { props: {} }
+    }
+
     const response = await client.linkTokenCreate({
       user: {
         client_user_id: clientUserId,
@@ -99,7 +104,7 @@ export async function getServerSideProps({ query }) {
     // Pass the result to your client-side app to initialize Link
     const { data } = response
 
-    return { props: { ...data, email: query.email } }
+    return { props: { ...data, id: customer.id } }
   } catch (e) {
     return { props: {} }
   }
