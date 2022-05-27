@@ -85,12 +85,6 @@ export async function getServerSideProps({ res, query }) {
 
     const customer = await stripe.customers.retrieve(query.id)
 
-    if (!customer) {
-      res.statusCode = 307
-      res.setHeader('Location', `/not-found`)
-      return { props: {} }
-    }
-
     const response = await client.linkTokenCreate({
       user: {
         client_user_id: clientUserId,
@@ -106,6 +100,10 @@ export async function getServerSideProps({ res, query }) {
 
     return { props: { ...data, id: customer.id } }
   } catch (e) {
+    if (e.code === 'resource_missing') {
+      res.statusCode = 307
+      res.setHeader('Location', `/not-found`)
+    }
     return { props: {} }
   }
 }
