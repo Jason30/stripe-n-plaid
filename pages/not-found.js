@@ -10,7 +10,7 @@ function NotFound() {
       </Head>
       <main>
         {
-          <h1>ID is not valid or hasn't been specified!</h1>
+          <h1>ID is not valid or is not specified!</h1>
         }
       </main>
       <style jsx>{`
